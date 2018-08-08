@@ -1,14 +1,43 @@
+plugins {
+    id 'ninja.miserable.blossom' version '1.0.1'
+}
+
+version '2.5'
+rootProject.version = "1.0"
+
 group 'fr.ahkrin'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 
-sourceCompatibility = 1.5
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url 'https://repo.spongepowered.org/maven' }
+    maven { url 'http://repo.drnaylor.co.uk/artifactory/list/minecraft' }
+    maven { url 'http://litarvan.github.io/maven' }
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compileOnly 'org.spongepowered:spongeapi:7.0.0'
+    compileOnly 'io.github.nucleuspowered:nucleus-api:1.1.1-S7.0'
+    compile 'fr.litarvan.commons:litarvan-commons:1.0.0'
+}
+
+blossom {
+    def location = 'src/main/java/fr/ahkrin/rp/RpChat.java'
+    replaceToken '@name@', project.name, location
+    replaceToken '@version@', rootProject.version, location
+    replaceToken '@id@', "rpchat", location
+}
+
+task fatjar(type: Jar) {
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    with jar
 }

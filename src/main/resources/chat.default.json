@@ -1,0 +1,18 @@
+{
+  "chat": [
+    {
+      "label": "default",
+      "prefix": "-",
+      "range": 10,
+      "format": "<%player% (say)> %message%",
+      "permission": "permission.roleplay.default",
+      "food": 0,
+      "isDefault": true,
+      "sound": {
+        "id": 1,
+        "volume": 1.0,
+        "pitch": 0.5
+      }
+    }
+  ]
+}
