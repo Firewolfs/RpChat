@@ -1,4 +1,4 @@
-package fr.ahkrin.rp.utils;
+package fr.ahkrin.rp.models;
 
 public class Sound {
 

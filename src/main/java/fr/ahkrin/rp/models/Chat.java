@@ -1,5 +1,6 @@
-package fr.ahkrin.rp.utils;
+package fr.ahkrin.rp.models;
 
+import fr.ahkrin.rp.listeners.TextColors;
 import org.spongepowered.api.text.Text;
 
 public class Chat {
@@ -36,8 +37,9 @@ public class Chat {
         return range;
     }
 
-    public String getFormat(String name, String message) {
-        return format.replace("%player%", name).replace("%prefix%", getPrefix()).replace("%message%", message);
+    public String getFormat(Text name, String message) {
+        TextColors colors = TextColors.find(name.getColor().getId());
+        return format.replace("%player%", colors.getAlternative() + name.toPlain() + TextColors.RESET.getAlternative()).replace("%prefix%", getPrefix()).replace("%message%", message);
     }
 
     public String getPermission() {
@@ -56,8 +58,9 @@ public class Chat {
         return sound;
     }
 
-    public Text format(String player, String message, Chat prefix){
-        return Text.of(this.getFormat(player, (this.isDefault() ? message : message.substring(prefix.getPrefix().length(), message.length()))));
+    public Text format(Text player, String message, Chat prefix){
+        String msg = isDefault ? message : message.substring(prefix.getPrefix().length());
+        return Text.builder(getFormat(player, msg)).build();
     }
 
 }

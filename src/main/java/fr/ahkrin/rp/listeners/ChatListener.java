@@ -1,17 +1,17 @@
 package fr.ahkrin.rp.listeners;
 
 import fr.ahkrin.rp.RpChat;
-import fr.ahkrin.rp.utils.Chat;
-import io.github.nucleuspowered.nucleus.api.NucleusAPI;
+import fr.ahkrin.rp.models.Chat;
+import fr.ahkrin.rp.utils.ChatUtils;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.manipulator.mutable.entity.FoodData;
 import org.spongepowered.api.effect.sound.SoundType;
-import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.util.Collection;
 
@@ -36,7 +36,7 @@ public class ChatListener {
         Chat chat = getChatByPrefix(prefix);
         if(p.hasPermission(chat.getPermission())){
             for(Player player : players){
-                if(!this.outOfRange(p, player, chat.getRange())){
+                if(!ChatUtils.outOfRange(p, player, chat.getRange())){
                     this.talk(p, player, chat, event.getRawMessage());
                 }
             }
@@ -46,7 +46,13 @@ public class ChatListener {
     }
 
     private void talk(Player source, Player receiver, Chat chat, Text message){
-        receiver.sendMessage(chat.format(getNickname(source), message.toPlain(), chat));
+        receiver.sendMessage(
+            TextSerializers.FORMATTING_CODE.deserialize(
+                TextSerializers.FORMATTING_CODE.serialize(
+                    chat.format(ChatUtils.getNickname(source), message.toPlain(), chat)
+                )
+            )
+        );
 
         int food = source.get(FoodData.class).get().foodLevel().getDirect().get() - chat.getFood();
         if(food < source.get(FoodData.class).get().foodLevel().getMaxValue()){
@@ -78,18 +84,6 @@ public class ChatListener {
             }
         }
         return null;
-    }
-
-    private Boolean outOfRange(Entity speaker, Entity receiver, int range) {
-        return !(speaker instanceof Player) ||
-            !(receiver instanceof Player) ||
-            !speaker.getLocation().equals(receiver.getLocation()) && (speaker.getWorld() != receiver.getWorld()
-                || speaker.getLocation().getPosition().distance(receiver.getLocation().getPosition()) > range);
-    }
-
-    private String getNickname(Player user){
-        return (NucleusAPI.getNicknameService().get().getNickname(user).isPresent() ?
-            NucleusAPI.getNicknameService().get().getNickname(user).get().toPlain() : user.getName());
     }
 
     private Chat[] getChats(){
