@@ -15,10 +15,14 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DiceCommand extends Command {
 
     private static final String PERMISSION = "permission.roleplay.dice";
+
+    private static final Pattern PATTERN = Pattern.compile("([0-9]{1,4}) ?\\+ ?([0-9]{1,4}) ?- ?([0-9]{1,4})");
 
     public DiceCommand() {
         super(
@@ -34,29 +38,35 @@ public class DiceCommand extends Command {
         if (!(source instanceof Player)) return CommandResult.empty();
         Player player = (Player) source;
 
-        try {
-            Integer max = (Integer) evaluate(arguments);
+        Matcher matcher = PATTERN.matcher(arguments);
+        if (matcher.find()) {
+            Integer max = Integer.decode(matcher.group(1));
+            Integer bonus = Integer.decode(matcher.group(2));
+            Integer malus = Integer.decode(matcher.group(3));
 
             Collection<Player> players = Sponge.getGame().getServer().getOnlinePlayers();
             if(player.hasPermission(PERMISSION)){
-                this.talk(players, player, max, arguments);
+                this.talk(players, player, max, bonus, malus);
             }
 
             return CommandResult.success();
-        } catch (ScriptException exception) {
-            player.sendMessage(Text.of("Cannot evaluate your expression."));
-            return CommandResult.empty();
         }
+
+        return CommandResult.empty();
     }
 
-    private void talk(Collection<Player> players, Player sender, Integer max, String expression) {
+    private void talk(Collection<Player> players, Player sender, Integer max, Integer bonus, Integer malus) {
         for (Player receiver : players) {
             if (!ChatUtils.outOfRange(sender, receiver, 8)) {
                 Text nickname = ChatUtils.getNickname(sender);
                 TextColors color = TextColors.find(nickname.getColor().getId());
 
-                String message = "[" + color.getAlternative() + nickname.toPlain() + TextColors.RESET.getAlternative() + "] " +
-                        "a obtenu [" + rand(max, 0) + "/" + max + "] sur le lance: " + expression;
+                String message = String.format(
+                    "[%s] a obtenu [%s]/[%s] avec un bonus de [%s] et un malus de [%s]",
+                    color.getAlternative() + nickname.toPlain() + TextColors.RESET.getAlternative(),
+                    rand(max, 0),
+                    max, bonus, malus
+                );
 
                 receiver.sendMessage(
                     TextSerializers.FORMATTING_CODE.deserialize(
@@ -65,12 +75,6 @@ public class DiceCommand extends Command {
                 );
             }
         }
-    }
-
-    private Object evaluate(String expression) throws ScriptException {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("JavaScript");
-        return engine.eval(expression);
     }
 
     private int rand(int max, int min){
